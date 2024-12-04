@@ -44,7 +44,7 @@ Before proceeding, ensure the following:
 uname -r
 ```
 
-If your kernel is older than 6.1, refer to **[Appendix 1](#appedix-1---kernal-lower-than-61)** for instructions on updating it.
+If your kernel is older than 6.1, refer to **[Appendix 1](#appendix-1---kernal-lower-than-61)** for instructions on updating it.
 
 ## Proxmox Setup
 ### DKMS Setup
@@ -81,6 +81,8 @@ dkms status
 ```
 
 ### GRUB Bootloader Setup
+Note, if you are using `systemd-boot` with `ZFS` instead follow [Appendix 3](#appendix-3---systemd-boot--zfs) and then continue onto the next step without performing these grub update commands.
+
 Backup and update the GRUB configuration:
 ```bash
 cp -a /etc/default/grub{,.bak}
@@ -103,7 +105,7 @@ cat /etc/sysfs.conf
 ```
 
 ### Secure Boot Configuration (Optional)
-If you are using Secure Boot, please follow the **[Appedix 2](#appedix-2---efi--enabled-and-secure-boot-enabled)** before next step
+If you are using Secure Boot, please follow the **[Appedix 2](#appendix-2---efi--enabled-and-secure-boot-enabled)** before next step
 
 ### Completing  vGPU setup
 Now reboot your Host
@@ -187,8 +189,8 @@ wmic UserAccount set PasswordExpires=False
 3. Launch **Intel Arc Control**. Click on the **gear icon**, **System Info**, **Hardware**. Verify it shows **Intel Iris Xe**.
 4. Launch **Task Manager**, then watch a YouTube video. Verify the GPU is being used.
 
-## Appedixies
-### Appedix 1 - Kernal lower than 6.1
+## Appendicies
+### Appendix 1 - Kernal lower than 6.1
 You can update the PVE kernel to 6.2 5.19 using these commands:
 1.  Disable enterprise repo:
 ```bash
@@ -224,7 +226,7 @@ uname -r
    
 **[Back to the Guide where you left](#proxmox-setup)**
 
-### Appedix 2 - EFI  **Enabled** and Secure Boot **Enabled**
+### Appendix 2 - EFI  **Enabled** and Secure Boot **Enabled**
 You need to install mokutill for Secure Boot
 ```bash
 apt update && apt install mokutil
@@ -237,6 +239,18 @@ Secure Boot MOK Configuration (Proxmox 8.1+)
 Select **Enroll MOK, Continue, Yes, (password), Reboot.**
 
 **[Back to the Guide where you left](#secure-boot-configuration-optional)**
+
+### Appendix 3 - systemd-boot / ZFS
+In the event you're running `systemd-boot` with `ZFS` the kernel parameters must be updated as per [this PVE article](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#sysboot_edit_kernel_cmdline).
+
+In this case the commands you need to run are as follows (adjusting parameters as needed as listed elsewhere in this readme):
+```bash
+cp /etc/kernel/cmdline /etc/kernel/backup-cmdline
+echo -n " intel_iommu=on iommu=pt i915.enable_guc=3 i915.max_vfs=7" >> /etc/kernel/cmdline
+proxmox-boot-tool refresh
+```
+Followed by rebooting the host
+**[Back to the Guide where you left](#grub-bootloader-setup)**
 
 ## Conclusion
 By completing this guide, you should be able to share your Intel Gen 12 iGPU across multiple VMs for enhanced video processing and virtualized graphical tasks within a Proxmox environment.
